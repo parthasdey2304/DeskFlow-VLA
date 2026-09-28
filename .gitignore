@@ -4,6 +4,12 @@ __pycache__/
 .pytest_cache/
 .hypothesis/
 
+# Android build outputs (binaries ship via GitHub Releases, never git)
+android/.gradle/
+android/app/build/
+android/local.properties
+android/*.log
+
 # Logs
 logs
 *.log

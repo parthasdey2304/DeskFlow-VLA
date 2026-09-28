@@ -8,7 +8,9 @@ param(
   [string]$Base = "main"
 )
 
-$ErrorActionPreference = "Stop"
+# Git writes progress to stderr; in PS 5.1 that becomes error records, so DO NOT
+# use "Stop" here — every step checks $LASTEXITCODE explicitly instead.
+$ErrorActionPreference = "Continue"
 
 function Step([string]$Name, [scriptblock]$Body) {
   Write-Host "`n==> $Name" -ForegroundColor Cyan

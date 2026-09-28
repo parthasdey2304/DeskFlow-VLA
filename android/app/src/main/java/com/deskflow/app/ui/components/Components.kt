@@ -7,12 +7,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.dp
 import com.deskflow.app.Invoice
 
 @Composable
 fun InvoiceCard(inv: Invoice) {
     ElevatedCard {
-        Row(Modifier.padding(16).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Row(Modifier.padding(16.dp).fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Column {
                 Text("${inv.id} · ${inv.vendor}", style = MaterialTheme.typography.titleSmall)
                 Text("₹%.2f".format(inv.total), style = MaterialTheme.typography.bodySmall)
