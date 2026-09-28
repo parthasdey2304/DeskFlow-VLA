@@ -9,7 +9,7 @@ android {
     buildFeatures { compose = true }
     defaultConfig {
         applicationId = "com.deskflow.app"
-        minSdk = 29; targetSdk = 34; versionCode = 1; versionName = "1.0.0-production"
+        minSdk = 29; targetSdk = 34; versionCode = 2; versionName = "1.0.1-production"
         ndk { abiFilters += "arm64-v8a" }
     }
     buildTypes {

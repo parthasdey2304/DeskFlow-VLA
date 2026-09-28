@@ -1,6 +1,6 @@
 {
   "name": "deskflow-desktop",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "DeskFlow-VLA desktop console — office workstation edge-link manager with E-stop",
   "author": "DeskFlow-VLA",
   "main": "main.js",
