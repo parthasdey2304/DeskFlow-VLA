@@ -37,12 +37,9 @@ Write-Host "PR: $prUrl" -ForegroundColor Green
 
 Step "Squash-merge + delete remote branch" { gh pr merge --squash --delete-branch $prUrl }
 Step "Sync $Base" { git checkout $Base; if ($?) { git pull --ff-only } }
-Step "Drop local branch" {
-  git branch -D $branch 2>$null
-  if ($LASTEXITCODE -ne 0) {
-    Write-Host "(local branch already gone - gh deleted it, nothing to do)"
-  }
-}
+Write-Host "`n==> Drop local branch" -ForegroundColor Cyan
+git branch -D $branch 2>$null
+if ($LASTEXITCODE -eq 0) { Write-Host "dropped." } else { Write-Host "(already gone - gh deleted it)" }
 
 Write-Host "`nShipped $branch -> $Base (squash). Branch deleted." -ForegroundColor Green
 exit 0
