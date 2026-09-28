@@ -6,6 +6,7 @@ __pycache__/
 
 # Android build outputs (binaries ship via GitHub Releases, never git)
 android/.gradle/
+android/build/
 android/app/build/
 android/local.properties
 android/*.log
