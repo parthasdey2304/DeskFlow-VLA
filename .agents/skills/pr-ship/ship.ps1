@@ -45,3 +45,4 @@ Step "Drop local branch" {
 }
 
 Write-Host "`nShipped $branch -> $Base (squash). Branch deleted." -ForegroundColor Green
+exit 0
