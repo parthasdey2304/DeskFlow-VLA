@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DeskFlow-VLA · Desktop Console</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>body{background:#09090b} .touch-target{min-height:44px;min-width:44px}</style>
+</head>
+<body class="text-zinc-200 font-mono">
+<header class="border-b border-zinc-800 px-4 py-3 flex items-center gap-3">
+  <div class="w-8 h-8 rounded-md bg-amber-400 text-black font-bold grid place-items-center">DF</div>
+  <div><h1 class="text-sm font-bold text-white">DESKFLOW DESKTOP</h1>
+  <p class="text-[11px] text-zinc-500">office workstation · edge link manager</p></div>
+  <span id="link" class="text-[11px] px-2 py-1 rounded-full border border-zinc-700 text-zinc-500">LINK …</span>
+  <span id="pill" class="text-[11px] px-2 py-1 rounded-full border border-emerald-500/40 text-emerald-300">● PROCESSING</span>
+</header>
+<main class="p-4 grid gap-3 max-w-3xl mx-auto">
+  <section class="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+    <h2 class="text-[11px] tracking-widest text-zinc-500">LIVE EDGE TELEMETRY</h2>
+    <p id="tele" class="mt-1 text-[12px] text-sky-300">waiting for edge link…</p>
+  </section>
+  <section class="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+    <h2 class="text-[11px] tracking-widest text-zinc-500">EVENT LOG</h2>
+    <pre id="log" class="mt-2 text-[12px] leading-relaxed text-zinc-400 h-40 overflow-auto">console ready — rescanning serial + LAN…</pre>
+  </section>
+  <div class="flex gap-2">
+    <button id="estop" class="touch-target flex-1 rounded-lg bg-red-500/15 border border-red-500/40 text-red-300 font-bold">E-STOP</button>
+    <button id="rescan" class="touch-target flex-1 rounded-lg border border-zinc-700 text-zinc-300">Rescan edge link</button>
+  </div>
+</main>
+<script src="./app.js"></script>
+</body>
+</html>
