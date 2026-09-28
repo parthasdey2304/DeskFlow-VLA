@@ -1,0 +1,18 @@
+{
+  "project": "DeskFlow-VLA",
+  "currency": "INR",
+  "items": [
+    { "part": "ESP32-S3 DevKitC-1", "qty": 1, "unit_inr": 1450, "supplier": "https://robu.in/", "notes": "Main motion MCU, FreeRTOS + micro-ROS" },
+    { "part": "Raspberry Pi 5 8GB + USB-UART CP2102", "qty": 1, "unit_inr": 9800, "supplier": "https://robu.in/", "notes": "Edge supervisor host (ROS 2 Jazzy)" },
+    { "part": "Sony IMX477 camera module + lens", "qty": 1, "unit_inr": 5200, "supplier": "https://www.adafruit.com/", "notes": "Overhead invoice imager" },
+    { "part": "Feetech STS3215 servo (12V bus)", "qty": 4, "unit_inr": 3850, "supplier": "https://www.feetechrc.com/", "notes": "4-DoF arm, daisy-chained half-duplex" },
+    { "part": "12V diaphragm vacuum pump", "qty": 1, "unit_inr": 1900, "supplier": "https://robu.in/", "notes": "Switched by GPIO4 relay module" },
+    { "part": "3-way solenoid dump valve 12V", "qty": 1, "unit_inr": 1250, "supplier": "https://robu.in/", "notes": "GPIO5 MOSFET, vents on E-stop" },
+    { "part": "MPX5010DP pressure sensor", "qty": 1, "unit_inr": 1450, "supplier": "https://www.nxp.com/", "notes": "Vacuum seal sense on GPIO6" },
+    { "part": "INA181 current-sense amp + 5mΩ shunt", "qty": 1, "unit_inr": 420, "supplier": "https://www.ti.com/", "notes": "Stall trip on GPIO7 @2800mA" },
+    { "part": "74HC126 bus buffer + IRLZ44N + relay mod", "qty": 1, "unit_inr": 650, "supplier": "https://robu.in/", "notes": "Servo DIR buffer, valve FET, pump relay" },
+    { "part": "12V/10A PSU + buck 5V/5A + fuse + wiring", "qty": 1, "unit_inr": 2800, "supplier": "https://robu.in/", "notes": "Orange 12V / red 5V / blue 3V3 / black GND" },
+    { "part": "Aluminium extrusion + suction cup + fasteners", "qty": 1, "unit_inr": 4500, "supplier": "local", "notes": "Arm frame + end effector" }
+  ],
+  "totals": { "bom_inr": 44070, "unit_sale_inr": 49999, "haas_monthly_inr": 2999 }
+}
