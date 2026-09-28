@@ -30,3 +30,8 @@
 - No generic purple/indigo gradient hero. Industrial tactile theme only
   (zinc/slate, hairline borders, noise overlay, Geist/JetBrains Mono).
 - bklit-ui → React Bits → shadcn/Radix precedence for new components.
+
+## 6. Shipping (manual deterministic path)
+- Skill: `.agents/skills/pr-ship` — `.agents/skills/pr-ship/ship.ps1 -Slug <name> -Message "<msg>"`.
+- Flow: `agent/<slug>-<yyyymmdd>` → push → `gh pr create` → `gh pr merge --squash --delete-branch` → sync `main`.
+- Use it when the merge is wanted now; `pr-merge-squash.yml` remains the safety net on every push.
