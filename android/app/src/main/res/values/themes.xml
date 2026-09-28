@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!-- Base window for the Compose edge monitor (all UI is Compose-drawn). -->
+  <style name="Theme.DeskFlow" parent="android:Theme.Material.NoActionBar">
+    <item name="android:statusBarColor">@color/statusBar</item>
+    <item name="android:navigationBarColor">@color/statusBar</item>
+    <item name="android:windowBackground">@color/statusBar</item>
+  </style>
+</resources>
