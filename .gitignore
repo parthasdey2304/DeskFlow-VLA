@@ -10,6 +10,7 @@ android/build/
 android/app/build/
 android/local.properties
 android/*.log
+*.apk
 
 # Logs
 logs
@@ -82,6 +83,13 @@ web_modules/
 .env
 .env.*
 !.env.example
+# keystores, keys, service accounts — never commit secrets
+*.jks
+*.key
+*.p12
+*service-account*.json
+# PlatformIO build cache
+.pio/
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache

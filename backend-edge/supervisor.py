@@ -22,6 +22,7 @@ except ImportError:  # host / CI without ROS 2
 
 from ai_fallback_client import FallbackClient
 from cbf_safety import CBFResult, plan_cubic_bezier, validate_trajectory
+from traj_sandbox import SandboxError, eval_trajectory_expr
 
 INPUT_TRAY = [0.0, -0.6, 1.1, 0.0]
 APPROVED_BIN = [1.4, -0.3, 0.6, 0.9]
@@ -71,7 +72,13 @@ class Supervisor:
         goal = APPROVED_BIN if fields["valid_math"] else AUDIT_BIN
 
         plan = self.ai.plan_trajectory(INPUT_TRAY, goal)
-        if plan.ok and isinstance(plan.data.get("waypoints"), list) and plan.data["waypoints"]:
+        if plan.ok and isinstance(plan.data.get("expr"), str):
+            # LLM-synthesized motion code: AST-sandboxed first, CBF-gated below.
+            try:
+                traj = eval_trajectory_expr(plan.data["expr"], {"t0": 0.0})
+            except SandboxError:
+                traj = plan_cubic_bezier(INPUT_TRAY, goal)
+        elif plan.ok and isinstance(plan.data.get("waypoints"), list) and plan.data["waypoints"]:
             traj = [{"q": w[:4], "dq": [0.0] * 4} for w in plan.data["waypoints"]]
         else:
             traj = plan_cubic_bezier(INPUT_TRAY, goal)

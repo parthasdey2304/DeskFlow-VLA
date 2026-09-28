@@ -1,10 +1,11 @@
 import { initializeApp, getApps } from 'firebase/app';
 import { getFirestore, collection, query, orderBy, limit, onSnapshot } from 'firebase/firestore';
+import { clientEnv } from './env-client';
 
 const config = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  apiKey: clientEnv.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: clientEnv.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: clientEnv.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
 };
 
 export type InvoiceDoc = {
