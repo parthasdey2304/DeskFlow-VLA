@@ -138,6 +138,6 @@ complete the pre-flight checklist in `docs/OPERATIONS.md` §3.
 
 ## Releases (signed binaries + SHA256)
 
-- Desktop v1.0.0 (Windows x64): `desktop/release_notes.md` + GitHub Releases tag `desktop-v1.0.0`.
-- Android v1.0.0-production (arm64-v8a): `android/release_notes.md` + GitHub Releases tag `android-v1.0.0-production`.
+- Desktop v1.0.1 (Windows x64): `desktop/release_notes.md` + GitHub Releases tag `desktop-v1.0.1`.
+- Android v1.0.1-production (arm64-v8a): `android/release_notes.md` + GitHub Releases tag `android-v1.0.1-production`.
 - Always verify the SHA256 (and the APK signer cert) before installing.
