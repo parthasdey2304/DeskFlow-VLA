@@ -1,0 +1,36 @@
+# DeskFlow-VLA Firestore security rules.
+# Collections (see docs/OPERATIONS.md §5 for full schemas):
+#   invoices  — written by edge supervisor service account; read by signed-in clients
+#   telemetry — latest-per-node docs written by edge; read by signed-in clients
+#   licenses  — written by /api/razorpay/verify via Admin SDK only; client reads own docs
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    match /invoices/{invoiceId} {
+      // Edge supervisor + verify route use the Admin SDK (bypass rules).
+      // Clients: read-only, must be authenticated (Clerk → Firebase custom claims
+      // or Firebase Auth session; wire request.auth per your identity bridge).
+      allow read: if signedIn();
+      allow create, update, delete: if false;
+    }
+
+    match /telemetry/{nodeId} {
+      allow read: if signedIn();
+      allow create, update, delete: if false;
+    }
+
+    match /licenses/{licenseId} {
+      // A user may read only the license doc whose id matches their uid,
+      // or any license explicitly listing them as owner.
+      allow read: if signedIn()
+        && (licenseId == request.auth.uid
+            || resource.data.ownerUid == request.auth.uid);
+      allow create, update, delete: if false;
+    }
+  }
+}

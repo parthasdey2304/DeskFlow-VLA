@@ -1,0 +1,38 @@
+{
+  "project": "DeskFlow-VLA",
+  "nodes": [
+    { "id": "pi5", "type": "mcu", "label": "Raspberry Pi 5 · ROS 2 Jazzy supervisor" },
+    { "id": "esp32", "type": "mcu", "label": "ESP32-S3 · FreeRTOS 100 Hz + micro-ROS" },
+    { "id": "g17_servo", "type": "pin", "label": "GPIO17 → 4× STS3215 half-duplex 1 Mbaud" },
+    { "id": "g4_pump", "type": "pin", "label": "GPIO4 → 12 V vacuum pump relay" },
+    { "id": "g5_valve", "type": "pin", "label": "GPIO5 → 3-way dump valve MOSFET" },
+    { "id": "g6_press", "type": "pin", "label": "GPIO6 ← MPX5010DP seal sense" },
+    { "id": "g7_current", "type": "pin", "label": "GPIO7 ← INA181 stall-current 2800 mA" },
+    { "id": "supervisor", "type": "ros", "label": "supervisor.py · camera → AI → CBF → stream" },
+    { "id": "cbf", "type": "ros", "label": "cbf_safety.py · h_pos ≥ 0, h_vel ≥ 0" },
+    { "id": "muse", "type": "llm", "label": "Muse Spark 1.3 (Tier 1)" },
+    { "id": "gemini", "type": "llm", "label": "Gemini Flash (Tier 2 Antigravity)" },
+    { "id": "kiro", "type": "llm", "label": "Amazon Kiro (Tier 3)" },
+    { "id": "firestore", "type": "cloud", "label": "Firestore invoices + telemetry" },
+    { "id": "web", "type": "ui", "label": "Next.js 14 web console + Razorpay" },
+    { "id": "desktop", "type": "ui", "label": "Electron desktop + tray" },
+    { "id": "android", "type": "ui", "label": "Jetpack Compose arm64-v8a" }
+  ],
+  "edges": [
+    { "from": "pi5", "to": "esp32", "protocol": "UART 921600-8N1", "topic": "micro-ROS agent" },
+    { "from": "esp32", "to": "g17_servo", "protocol": "half-duplex UART 1 Mbaud" },
+    { "from": "esp32", "to": "g4_pump", "protocol": "GPIO digital → relay 12 V/2.5 A" },
+    { "from": "esp32", "to": "g5_valve", "protocol": "GPIO digital → MOSFET, vent on E-stop" },
+    { "from": "g6_press", "to": "esp32", "protocol": "ADC → /deskflow/seal_engaged @8 kPa" },
+    { "from": "g7_current", "to": "esp32", "protocol": "ADC → /deskflow/estop @2800 mA" },
+    { "from": "supervisor", "to": "cbf", "protocol": "validate_trajectory() gate" },
+    { "from": "supervisor", "to": "muse", "protocol": "HTTPS Tier 1" },
+    { "from": "supervisor", "to": "gemini", "protocol": "HTTPS Tier 2 fallback" },
+    { "from": "supervisor", "to": "kiro", "protocol": "HTTPS Tier 3 emergency" },
+    { "from": "supervisor", "to": "esp32", "protocol": "/deskflow/trajectory Float32MultiArray" },
+    { "from": "supervisor", "to": "firestore", "protocol": "audit ledger + telemetry sync" },
+    { "from": "firestore", "to": "web", "protocol": "onSnapshot invoices" },
+    { "from": "firestore", "to": "android", "protocol": "Firestore KTX sync" },
+    { "from": "web", "to": "desktop", "protocol": "shared console state" }
+  ]
+}

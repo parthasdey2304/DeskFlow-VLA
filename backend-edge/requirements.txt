@@ -1,0 +1,8 @@
+# DeskFlow-VLA edge dependencies.
+# NOTE: rclpy / sensor_msgs / std_msgs are provided by the ROS 2 underlay
+# (ros:jazzy-ros-core image or a sourced Jazzy/Humble install) — they are
+# NOT pip-installable, so they must NOT appear as pip requirements below.
+# micro-ros-agent likewise runs as a ROS binary / Docker service, not a pip package.
+numpy>=1.26
+requests>=2.31
+pytest>=8.0
