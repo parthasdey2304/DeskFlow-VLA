@@ -64,19 +64,42 @@ float g_q_cmd[4] = {0, 0, 0, 0};
 float g_q_act[4] = {0, 0, 0, 0};
 portMUX_TYPE g_mux = portMUX_INITIALIZER_UNLOCKED;
 
-// ---------- Helpers ----------
-float readMotorCurrentMA() {
-  int raw = analogRead(PIN_CURRENT_SENSE);
+// ---------- Sensor conditioning ----------
+// 4x ADC oversampling kills single-sample spikes; the stall trip still acts on
+// RAW readings x3 (never let a filter mask a real stall), while telemetry and
+// the DF console use the EMA-smoothed value (alpha 0.25).
+static constexpr int ADC_OVERSAMPLE = 4;
+static constexpr float IMA_EMA_ALPHA = 0.25f;
+static float g_ima_ema = 0.0f;
+static bool g_ima_ema_init = false;
+
+static int analogAvg(int pin) {
+  long acc = 0;
+  for (int i = 0; i < ADC_OVERSAMPLE; i++) acc += analogRead(pin);
+  return (int)(acc / ADC_OVERSAMPLE);
+}
+
+// Vacuum tare: averaged at boot so ambient weather never corrupts the seal
+// threshold. Seal logic stays differential (reading - tare >= 8 kPa).
+static float g_press_tare_kpa = 0.0f;
+
+// MPX5010DP: Vout = Vs*(0.09*P_kPa + 0.04), Vs=3.3 -> P = ((V/Vs)-0.04)/0.09
+static float readVacuumRawKPa() {
+  int raw = analogAvg(PIN_PRESSURE_ADC);
+  float v = (raw / 4095.0f) * ADC_REF_V;
+  return ((v / ADC_REF_V) - 0.04f) / 0.09f;
+}
+
+static float readVacuumKPa() { return readVacuumRawKPa() - g_press_tare_kpa; }
+
+static float readMotorCurrentMA() {
+  int raw = analogAvg(PIN_CURRENT_SENSE);
   float v = (raw / 4095.0f) * ADC_REF_V;
   return (v / (SHUNT_OHM * SHUNT_GAIN)) * 1000.0f;
 }
 
-// MPX5010DP: Vout = Vs*(0.09*P_kPa + 0.04), Vs=3.3 → P = ((V/Vs)-0.04)/0.09
-float readVacuumKPa() {
-  int raw = analogRead(PIN_PRESSURE_ADC);
-  float v = (raw / 4095.0f) * ADC_REF_V;
-  return ((v / ADC_REF_V) - 0.04f) / 0.09f;
-}
+// Stall-current reflex + seal publish live in taskMotion below; the trip acts
+// on oversampled RAW current (x3 consecutive), telemetry uses g_ima_ema.
 
 void ventAndFreeze(const char *reason) {
   portENTER_CRITICAL(&g_mux);
@@ -91,6 +114,8 @@ void ventAndFreeze(const char *reason) {
   (void)reason;
 }
 
+volatile unsigned long g_last_traj_ms = 0;  // watchdog: micro-ROS link freshness
+
 void trajCallback(const void *msgin) {
   if (g_estop_latched) return;  // require explicit reset from supervisor
   const auto *m = (const std_msgs__msg__float32_multi_array *)msgin;
@@ -104,6 +129,7 @@ void trajCallback(const void *msgin) {
     g_q_cmd[i] = constrain(q, Q_MIN[i], Q_MAX[i]);
   }
   portEXIT_CRITICAL(&g_mux);
+  g_last_traj_ms = millis();
 }
 
 // ---------- Feetech STS3215 bus driver (SMS/STS protocol, single-wire half-duplex) ----------
@@ -255,14 +281,37 @@ void servoBusRead(float q[4]) {
   slot = (uint8_t)((slot + 1) % 4);
 }
 
+// Servo soft-start: per-cycle slew limit (rad) so setpoint jumps become ramps.
+// 0.03 rad @100 Hz = 3 rad/s max slew, consistent with V_MAX. Also guarantees
+// no jump when E-stop clears (output resumes from the last SENT position).
+static constexpr float SERVO_SLEW = 0.03f;
+static float g_q_sent[4] = {0, 0, 0, 0};
+
+static void statusLedTick() {
+  // Solid = healthy, 2-blink = stale micro-ROS link (>5 s, check the agent),
+  // 3-blink = E-stop latched.
+  unsigned long t = millis();
+  if (g_estop_latched) {
+    uint8_t slot = (t / 200) % 8;
+    digitalWrite(PIN_STATUS_LED, (slot == 0 || slot == 2 || slot == 4) ? HIGH : LOW);
+  } else if (t - g_last_traj_ms > 5000) {
+    uint8_t slot = (t / 250) % 8;
+    digitalWrite(PIN_STATUS_LED, (slot == 0 || slot == 2) ? HIGH : LOW);
+  } else {
+    digitalWrite(PIN_STATUS_LED, HIGH);
+  }
+}
+
 // ---------- FreeRTOS tasks ----------
 void taskMotion(void *arg) {
   (void)arg;
   TickType_t last = xTaskGetTickCount();
   const TickType_t period = pdMS_TO_TICKS((int)LOOP_DT_MS);
   while (true) {
-    // 1. Stall-current reflex — highest priority, hardware-level.
+    // 1. Stall-current reflex — highest priority, hardware-level, RAW x3.
     float ima = readMotorCurrentMA();
+    if (!g_ima_ema_init) { g_ima_ema = ima; g_ima_ema_init = true; }
+    g_ima_ema += IMA_EMA_ALPHA * (ima - g_ima_ema);  // telemetry only
     if (ima > STALL_CURRENT_MA) {
       if (++g_overcurrent_hits >= STALL_TRIP_SAMPLES && !g_estop_latched) {
         ventAndFreeze("stall-current");
@@ -280,17 +329,23 @@ void taskMotion(void *arg) {
       rcl_publish(&g_seal_pub, &g_seal_msg, nullptr);
     }
 
-    // 3. Motion output (frozen when e-stopped).
+    // 3. Motion output (frozen when e-stopped, slew-limited always).
     if (!g_estop_latched) {
       float q[4];
       portENTER_CRITICAL(&g_mux);
       memcpy(q, (const void *)g_q_cmd, sizeof(q));
       portEXIT_CRITICAL(&g_mux);
-      servoBusWrite(q);
+      for (int i = 0; i < 4; i++) {
+        float d = q[i] - g_q_sent[i];
+        if (d > SERVO_SLEW) d = SERVO_SLEW;
+        else if (d < -SERVO_SLEW) d = -SERVO_SLEW;
+        g_q_sent[i] += d;
+      }
+      servoBusWrite(g_q_sent);
     }
     servoBusRead(g_q_act);
 
-    digitalWrite(PIN_STATUS_LED, g_estop_latched ? (millis() / 200 % 2) : HIGH);
+    statusLedTick();
     vTaskDelayUntil(&last, period);
   }
 }
@@ -307,6 +362,12 @@ void setup() {
   Serial1.begin(SERVO_BAUD, SERIAL_8N1, PIN_SERVO_UART_TX, PIN_SERVO_UART_TX);  // servo bus, single-wire HD on GPIO17
   Serial0.begin(115200);   // USB-Serial-JTAG debug console: `DF:` diag lines for the desktop app
   delay(100);
+  // Pressure tare: average 16 ambient reads (pump OFF, vented at boot) so the
+  // seal threshold stays differential against weather, not absolute.
+  float tare = 0;
+  for (int i = 0; i < 16; i++) { tare += readVacuumRawKPa(); delay(10); }
+  g_press_tare_kpa = tare / 16.0f;
+  Serial0.printf("DF tare pkpa=%.2f\n", g_press_tare_kpa);
   // Bus census + safe defaults. Missing IDs are reported, never fatal here —
   // motion simply holds until the chain is complete (CBF gates the plan anyway).
   for (int i = 0; i < 4; i++) {
@@ -363,7 +424,7 @@ void loop() {
     Serial0.printf("DF q=%.2f,%.2f,%.2f,%.2f seal=%d estop=%d ima=%.0f pkpa=%.1f\n",
       g_q_act[0], g_q_act[1], g_q_act[2], g_q_act[3],
       g_seal_msg.data ? 1 : 0, g_estop_latched ? 1 : 0,
-      readMotorCurrentMA(), readVacuumKPa());
+      g_ima_ema, readVacuumKPa());
   }
   delay(5);
 }

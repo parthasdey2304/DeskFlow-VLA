@@ -12,6 +12,8 @@
     "@clerk/nextjs": "^5.7.0",
     "@radix-ui/react-dialog": "^1.1.2",
     "@radix-ui/react-slot": "^1.1.0",
+    "@react-three/drei": "^9.114.0",
+    "@react-three/fiber": "^8.17.6",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "firebase": "^10.13.0",
@@ -24,8 +26,7 @@
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
     "three": "^0.169.0",
-    "@react-three/fiber": "^8.17.6",
-    "@react-three/drei": "^9.114.0"
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@types/node": "^20.16.0",

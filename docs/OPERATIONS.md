@@ -91,6 +91,14 @@ cd backend-edge && pip install -r requirements.txt && python supervisor.py
 - Pressure zero: read MPX5010DP open-to-air; seal threshold stays 8.0 kPa
   differential, not absolute.
 - Current zero: read shunt amp with servos idle; trip stays 2800 mA.
+- Pressure tare: firmware averages 16 ambient reads at boot (pump OFF, vented);
+  seal stays differential (reading − tare ≥ 8 kPa). Re-tare by rebooting unloaded.
+- Slew limit: servo output ramps at ≤0.03 rad/cycle (≈3 rad/s); E-stop resume
+  is bumpless because output restarts from the last sent position.
+- Status LED: solid = healthy, 2-blink = stale micro-ROS link (>5 s, check the
+  agent), 3-blink = E-stop latched.
+- Current sensing: 4× oversampled ADC + EMA telemetry; the 2800 mA trip still
+  acts on raw readings ×3 (a filter must never mask a real stall).
 
 ---
 

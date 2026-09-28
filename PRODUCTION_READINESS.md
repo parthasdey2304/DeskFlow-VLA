@@ -5,11 +5,12 @@ Generated: 2026-09-28 · Branch: main · Audit pass + build-green pass complete
 ## 1. Verification results
 | Gate | Command | Result |
 |---|---|---|
-| CBF + fallback + supervisor unit tests | `python -m pytest backend-edge/tests -q` | **7 passed** |
+| CBF + fallback + supervisor unit tests | `python -m pytest backend-edge/tests -q` | **22 passed** (CBF, fallback, routing, AST sandbox) |
 | pip requirements resolve | `pip install --dry-run --no-deps -r backend-edge/requirements.txt` | **pass** |
 | Architecture graph parse + ref check | `node graphify/render_graph.js --check` | **16 nodes / 15 edges ok**, no dangling refs |
+| Docs link check | `node docs/check-links.mjs` | **pass** |
 | Desktop main/preload/renderer syntax | `node --check` | **pass** |
-| Next.js production build | `cd web && npm install && npm run build` | **pass — 8/8 routes** (dummy Clerk keys, telemetry disabled) |
+| Next.js production build | `cd web && npm install && npm run build` | **pass — 8/8 routes** (dummy Clerk keys, degraded-mode env banner verified) |
 
 ## 2. Module inventory
 - **Hardware**: `esp32_firmware.ino` (100 Hz FreeRTOS, stall trip 2800 mA×3, vent-on-boot), `platformio.ini`, interactive Tailwind `visualizer/` (rail toggles + hover specs), `bom.json` (₹44,070 costed), `pinouts.md`.
@@ -87,3 +88,37 @@ Generated: 2026-09-28 · Branch: main · Audit pass + build-green pass complete
    registry, not a button library; local components stay, exact adoption
    commands recorded in `docs/OPERATIONS.md` §7.4.
 5. **Everything committed** — see git log.
+
+## 7. v1.3.0 fifty-point roadmap pass (this session)
+
+Triaged all 50 roadmap TODOs against the repo: ~30 were already built and were
+verified, not rebuilt. Implemented the genuinely-missing, verifiable remainder:
+
+- **Backend**: `traj_sandbox.py` — AST-whitelisted expression evaluator for
+  LLM-synthesized motion (math only, comprehension scoping, NaN/Inf rejected),
+  wired as a plan source in `supervisor.py`, still CBF-gated; 15 new tests
+  (22/22 total). `Dockerfile` now copies the module.
+- **Firmware**: boot pressure tare (differential seal), 4× ADC oversample +
+  EMA telemetry (trip stays raw ×3), LED blink codes (solid / 2-blink stale
+  link / 3-blink E-stop), 0.03 rad/cycle slew limiter (bumpless E-stop resume).
+  Review-verified; `pio run` still required before flashing.
+- **Repo**: Apache-2.0 hardware safety addendum in `LICENSE`; `.gitignore`
+  gains `.pio/`, `*.apk`, `*.jks`, `*.key`, service accounts; live
+  `.github/workflows/ci.yml` (GitHub only runs `.github/` — the `.agents/`
+  workflow mirror was dormant); `docs/check-links.mjs` (8 files green);
+  `vercel.json` strict security headers.
+- **Android**: `enableEdgeToEdge()`, `PullToRefreshBox` ledger refresh, real
+  Firestore `invoices` fetch with local-snapshot fallback + live/offline chip;
+  `assembleRelease` green.
+- **Web**: relative timestamps + exact-UTC hover, INR/USD toggle, Zod env
+  validation with degraded-mode banner (secrets kept server-side), route
+  skeletons, industrial toasts, shortcuts (Space E-stop / ⌘K search / R reset /
+  Esc), WebAudio mechanical cues, autofocus invoice search, bottom-sheet
+  inspector, CSV + XML export, dynamic status favicon, custom
+  selection/scrollbars. `npm run build` green with the env banner firing.
+- **Deliberately deferred** (documented, not silently dropped): Pi thermal
+  widget (no cloud persistence path until Admin SDK is wired), local WebSocket
+  video bridge (needs a Pi-side server), USB-OTG diagnostics (hardware-gated),
+  TAMP/py_trees + peel planner tuning (needs ROS env + hardware), Clerk RBAC
+  (needs org setup), Sentry (needs DSN), IndexedDB offline queue, frameless
+  Electron chrome.
